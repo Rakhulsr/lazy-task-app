@@ -82,6 +82,6 @@ git clone https://github.com/Rakhulsr/lazy-task-app.git
     ```bash
     bun run dev
     ```
-```
+
 
 
