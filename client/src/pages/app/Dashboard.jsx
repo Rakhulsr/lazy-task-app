@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import TaskCard from "../../components/TaskCard.jsx";
 import { useQuery } from "@tanstack/react-query";
 import { Navigate } from "react-router-dom";
-
 function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debounced, setDebounced] = useState("");
@@ -14,11 +13,7 @@ function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const {
-    data: authUser,
-    isLoading,
-    isError,
-  } = useQuery({
+  const { data: authUser } = useQuery({
     queryKey: ["authUser"],
     queryFn: async () => {
       try {
@@ -83,13 +78,7 @@ function Dashboard() {
       const tasksResponse = await fetch("/api/tasks");
       const tasksData = await tasksResponse.json();
 
-      const editedTask = tasksData.find((task) => task.id === id);
-      if (editedTask) {
-        tasksData.splice(tasksData.indexOf(editedTask), 1);
-        tasksData.unshift(editedTask);
-      }
-
-      setTasks(tasksData);
+      setTasks([updatedTask, ...tasksData]);
     } catch (error) {
       setError(error.message);
     } finally {
