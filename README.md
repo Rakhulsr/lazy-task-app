@@ -84,4 +84,4 @@ git clone https://github.com/Rakhulsr/lazy-task-app.git
     ```
 ```
 
-README ini memberikan langkah-langkah jelas untuk instalasi dan menjalankan project baik di sisi backend maupun client.
+
