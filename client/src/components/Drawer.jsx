@@ -1,4 +1,4 @@
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useNavigate } from "react-router-dom";
 import {
   AiOutlineDashboard,
   AiOutlineDelete,
@@ -6,10 +6,42 @@ import {
   AiOutlineLogout,
 } from "react-icons/ai";
 import logo from "../assets/lazy.svg";
-// import ProfileEditModal from "./modal/ProfileEditModal";
+
 import UserProfile from "./profile/UserProfile.jsx";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
 
 function Drawer() {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  const { mutate: logoutMutate } = useMutation({
+    mutationFn: async () => {
+      try {
+        const res = await fetch("/api/auth/logout", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Something went wrong");
+        return data;
+      } catch (error) {
+        console.error(error);
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      localStorage.removeItem("authToken");
+      queryClient.invalidateQueries({ queryKey: "authUser" });
+      navigate("/login", { replace: true });
+    },
+  });
+
+  // const { data: authUser } = useQuery({ queryKey: ["authUser"] });
+
   return (
     <div className="drawer lg:drawer-open ">
       <input id="my-drawer-3" type="checkbox" className="drawer-toggle" />
@@ -59,15 +91,9 @@ function Drawer() {
       </div>
 
       <div className="drawer-side">
-        <label
-          htmlFor="my-drawer-3"
-          aria-label="close sidebar"
-          className="drawer-overlay"
-        ></label>
-
+        <label htmlFor="my-drawer-3" className="drawer-overlay"></label>
         <ul className="menu min-h-full w-56 p-4 bg-primary">
           <UserProfile />
-
           <Link
             to="/app/dashboard"
             className="flex items-center p-4 hover:bg-gray-700 transition"
@@ -75,7 +101,6 @@ function Drawer() {
             <AiOutlineDashboard className="mr-3" />
             Dashboard
           </Link>
-
           <Link
             to="/app/trash"
             className="flex items-center p-4 hover:bg-gray-700 transition"
@@ -83,14 +108,13 @@ function Drawer() {
             <AiOutlineDelete className="mr-3" />
             Trash
           </Link>
-
-          <Link
-            to="/logout"
+          <button
+            onClick={() => logoutMutate()}
             className="flex items-center p-4 hover:bg-gray-700 transition mt-auto"
           >
             <AiOutlineLogout className="mr-3" />
             Logout
-          </Link>
+          </button>
         </ul>
       </div>
     </div>

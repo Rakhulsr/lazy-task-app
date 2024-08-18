@@ -1,19 +1,51 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
 
-function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [username, setUsername] = useState("");
+function SignupPage() {
+  const initalState = {
+    fullname: "",
+    username: "",
+    email: "",
+    password: "",
+  };
+
+  const [formData, setFormData] = useState(initalState);
   const navigate = useNavigate();
+
+  const { mutate: signupMutate, isLoading } = useMutation({
+    mutationFn: async ({ fullname, username, email, password }) => {
+      try {
+        const res = await fetch("api/auth/signup", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ fullname, username, email, password }),
+        });
+        if (!res.ok) throw new Error(data.error);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+
+        console.log(data);
+      } catch (error) {
+        console.error(error);
+        throw error;
+      }
+    },
+  });
+
+  const handleInputChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    console.log("Usernmae:", username);
-    console.log("Email:", email);
-    console.log("Password:", password);
-    navigate("/login");
+    signupMutate(formData, {
+      onSuccess: () => {
+        navigate("/login", { replace: true });
+      },
+    });
   };
 
   return (
@@ -28,18 +60,37 @@ function LoginPage() {
               htmlFor="username"
               className="block text-sm font-medium text-black"
             >
+              Fullname
+            </label>
+            <input
+              type="text"
+              id="fullname"
+              name="fullname"
+              value={formData.fullname}
+              onChange={handleInputChange}
+              required
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent sm:text-sm"
+            />
+          </div>
+
+          <div className="mb-4">
+            <label
+              htmlFor="username"
+              className="block text-sm font-medium text-black"
+            >
               Username
             </label>
             <input
               type="text"
               id="username"
               name="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={formData.username}
+              onChange={handleInputChange}
               required
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent sm:text-sm"
             />
           </div>
+
           <div className="mb-4">
             <label
               htmlFor="email"
@@ -51,8 +102,8 @@ function LoginPage() {
               type="email"
               id="email"
               name="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={formData.email}
+              onChange={handleInputChange}
               required
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent sm:text-sm"
             />
@@ -69,8 +120,8 @@ function LoginPage() {
               type="password"
               id="password"
               name="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={formData.password}
+              onChange={handleInputChange}
               required
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent sm:text-sm"
             />
@@ -78,9 +129,10 @@ function LoginPage() {
 
           <button
             type="submit"
+            disabled={isLoading}
             className="w-full bg-primary text-white py-2 px-4 rounded-lg shadow-md hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
           >
-            Sign Up
+            {isLoading ? "Creating Account..." : "Sign Up"}
           </button>
         </form>
       </div>
@@ -88,4 +140,4 @@ function LoginPage() {
   );
 }
 
-export default LoginPage;
+export default SignupPage;

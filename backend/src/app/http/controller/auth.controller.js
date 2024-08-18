@@ -1,5 +1,6 @@
 import prisma from "../../../client/prisma.js";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import generateCookie from "../providers/auth.js";
 
 export async function signup(req, res) {
@@ -24,8 +25,6 @@ export async function signup(req, res) {
         profile: null,
       },
     });
-
-    generateCookie(newUser.id, res);
 
     res
       .status(201)
@@ -54,11 +53,16 @@ export async function login(req, res) {
     if (!isCorrectPassword)
       return res.status(401).json({ message: "wrong password" });
 
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+
     generateCookie(user.id, res);
 
     res.status(200).json({
       id: user.id,
       username: user.username,
+      token,
     });
   } catch (error) {
     console.error(`error message : ${error.message}`);
@@ -88,11 +92,17 @@ export async function me(req, res) {
         username: true,
       },
     });
-    console.log("req.user:", authUser);
+
+    generateCookie(authUser.id, res);
+
     if (!authUser) {
       return res.status(401).json({ error: "Unauthorized" });
     }
-    res.status(200).json(authUser);
+    res.status(200).json({
+      id: authUser.id,
+      username: authUser.username,
+      token: authUser.token,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal Server Error" });

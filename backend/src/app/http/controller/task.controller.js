@@ -5,7 +5,8 @@ export async function all(req, res) {
     const userId = req.user.id;
     const datas = await prisma.tasks.findMany({
       where: {
-        UserId: userId,
+        userId: parseInt(userId),
+        deleted_at: null,
       },
     });
 
@@ -28,12 +29,13 @@ export async function getOneTask(req, res) {
     const task = await prisma.tasks.findUnique({
       where: {
         id: parseInt(id),
-        UserId: userId,
+        userId: userId,
+        deleted_at: null,
       },
       select: {
         title: true,
         content: true,
-        UserId: true,
+        userId: true,
         user: true,
       },
     });
@@ -51,14 +53,13 @@ export async function getOneTask(req, res) {
 
 export async function createTask(req, res) {
   try {
-    const { title, content, status } = req.body;
+    const { title, content } = req.body;
     const userId = req.user.id;
 
     const newTask = await prisma.tasks.create({
       data: {
         title,
         content,
-        status,
         userId,
       },
     });
@@ -81,7 +82,7 @@ export async function updateTask(req, res) {
     const task = await prisma.tasks.findFirst({
       where: {
         id: parseInt(taskId),
-        UserId: parseInt(userId),
+        userId: parseInt(userId),
       },
     });
 
@@ -142,7 +143,47 @@ export async function softDeleteTask(req, res) {
   }
 }
 
+export async function setTaskStatus(req, res) {
+  const taskId = req.params.id;
+  const userId = req.user.id;
+
+  const { status } = req.body;
+  try {
+    const taskStatus = await prisma.tasks.update({
+      where: {
+        id: parseInt(taskId),
+        userId: parseInt(userId),
+      },
+      data: {
+        status: status,
+      },
+    });
+    res.json(taskStatus);
+  } catch (error) {
+    console.error("Failed to update task status:", error);
+    res.status(500).json({ error: "Failed to update task status" });
+  }
+}
+
 //trash dashboard
+export async function trashTasks(req, res) {
+  try {
+    const userId = req.user.id;
+    const datas = await prisma.tasks.findMany({
+      where: {
+        userId: parseInt(userId),
+        deleted_at: {
+          not: null,
+        },
+      },
+    });
+    res.status(200).json(datas);
+  } catch (error) {
+    console.error("Failed to move trash task ", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+
 export async function permanentDeleteTask(req, res) {
   try {
     const taskId = req.params.id;

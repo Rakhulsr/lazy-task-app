@@ -1,39 +1,98 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AiOutlineEdit } from "react-icons/ai";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 function UserProfile() {
-  const [fullName, setFullName] = useState("Budi Sedunia");
-  const [username, setUsername] = useState("budi");
-  const [profilePicture, setProfilePicture] = useState(
-    "https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
-  );
+  const queryClient = useQueryClient();
+  const {
+    data: authUser,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["authUser"],
+    queryFn: async () => {
+      const res = await fetch("/api/auth/me", {
+        credentials: "include",
+      });
+      return res.json();
+    },
+  });
+
+  const {
+    data: profile,
+    isLoading: isProfileLoading,
+    isError: isProfileError,
+  } = useQuery({
+    queryKey: ["profile"],
+    queryFn: async () => {
+      const res = await fetch("/api/profile", {
+        credentials: "include",
+      });
+      return res.json();
+    },
+  });
+
+  const [username, setUsername] = useState("");
+  const [fullname, setFullname] = useState("");
+  const [profilePicture, setProfilePicture] = useState("");
+
+  useEffect(() => {
+    if (profile) {
+      setUsername(profile.username);
+      setFullname(profile.fullname);
+      setProfilePicture(profile.profile);
+    }
+  }, [profile]);
 
   const handleSaveChanges = (e) => {
     e.preventDefault();
-    const updatedFullName = e.target.fullname.value;
     const updatedUsername = e.target.username.value;
-    const updatedProfilePicture = e.target.profile_picture.files[0]
-      ? URL.createObjectURL(e.target.profile_picture.files[0])
-      : profilePicture;
+    const updatedFullname = e.target.fullname.value;
+    const file = e.target.profile_picture.files[0];
 
-    setFullName(updatedFullName);
-    setUsername(updatedUsername);
-    setProfilePicture(updatedProfilePicture);
+    const formData = new FormData();
+    formData.append("username", updatedUsername);
+    formData.append("fullname", updatedFullname);
+    if (file) {
+      formData.append("profile", file);
+    }
 
-    document.getElementById("profile_edit_modal").close();
+    fetch("/api/profile/update", {
+      method: "PUT",
+      credentials: "include",
+      body: formData,
+    })
+      .then((res) => res.json())
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: ["authUser"] });
+        queryClient.invalidateQueries({ queryKey: ["profile"] });
+        document.getElementById("profile_edit_modal").close();
+      })
+      .catch((error) => console.error(error));
   };
+
+  if (isLoading || isProfileLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (isError || isProfileError) {
+    return <div>Error: {isError.message || isProfileError.message}</div>;
+  }
 
   return (
     <div className="flex flex-col items-center mb-6">
       <div className="avatar justify-center py-5">
         <div className="w-20 rounded-full">
-          <img src={profilePicture} alt="User Profile" />
+          <img src={profile.profile} alt="User Profile" />
         </div>
       </div>
+
       <div className="text-center">
-        <h3 className="text-lg font-semibold text-white">{fullName}</h3>
+        <h3 className="text-lg text-gray-300">{fullname}</h3>
+
         <p className="text-sm text-gray-300">@{username}</p>
       </div>
+
       <button
         className="btn btn-xs sm:btn-sm md:btn-sm lg:btn-sm mt-3"
         onClick={() =>
@@ -59,22 +118,6 @@ function UserProfile() {
 
             <div className="mb-4">
               <label
-                htmlFor="fullname"
-                className="block text-sm font-medium text-gray-400"
-              >
-                Full Name
-              </label>
-              <input
-                type="text"
-                id="fullname"
-                defaultValue={fullName}
-                placeholder="Enter your full name"
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm"
-              />
-            </div>
-
-            <div className="mb-4">
-              <label
                 htmlFor="username"
                 className="block text-sm font-medium text-gray-400"
               >
@@ -89,6 +132,22 @@ function UserProfile() {
               />
             </div>
 
+            <div className="mb-4">
+              <label
+                htmlFor="fullname"
+                className="block text-sm font-medium text-gray-400"
+              >
+                Full Name
+              </label>
+              <input
+                type="text"
+                id="fullname"
+                defaultValue={fullname}
+                placeholder="Enter your full name"
+                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm"
+              />
+            </div>
+
             <div className="mb-6">
               <label
                 htmlFor="profile_picture"
@@ -99,18 +158,14 @@ function UserProfile() {
               <input
                 type="file"
                 id="profile_picture"
-                className="file-input file-input-bordered file-input-md w-full mt-2"
+                accept="image/*"
+                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm"
               />
             </div>
 
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                className="btn btn-primary px-6 py-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                Save Changes
-              </button>
-            </div>
+            <button type="submit" className="btn btn-primary btn-block mt-6">
+              Save Changes
+            </button>
           </form>
         </div>
       </dialog>

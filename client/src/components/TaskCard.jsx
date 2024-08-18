@@ -40,21 +40,20 @@ function TaskCard({ id, title, content, status, onEdit, onDelete }) {
       <div
         className={`p-4 border rounded-lg shadow-md ${
           isCompleted ? "bg-green-100" : "bg-white"
-        }`}
+        } overflow-hidden whitespace-nowrap`}
       >
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="text-lg font-bold">{title}</h3>
-            <p className="text-gray-600 line-clamp-2">{content}</p>
+        <div className="flex justify-between items-start ">
+          <div className="line-clamp-2">
+            <h3 className="text-lg font-bold line-clamp-2">{title}</h3>
+            <p className="text-gray-600 line-clamp-2">{content} </p>
           </div>
           <input
             type="checkbox"
             checked={isCompleted}
             onChange={handleCheckboxChange}
-            className="h-5 w-5"
+            className="max-h-md max-w-md "
           />
         </div>
-
         <div className="mt-4 flex justify-between items-center">
           <span
             className={`text-sm font-semibold ${
@@ -88,16 +87,16 @@ function TaskCard({ id, title, content, status, onEdit, onDelete }) {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full relative">
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-50 overflow-y-auto">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-lg relative overflow-y-auto scrollbar">
             <button
               onClick={toggleModal}
               className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
             >
               ✕
             </button>
-            <h3 className="text-lg font-bold mb-4">{title}</h3>
-            <p className="text-gray-700">{content}</p>
+            <h3 className="text-lg font-bold mb-4 break-words">{title}</h3>
+            <p className="text-gray-700 break-words">{content}</p>
             <div className="mt-4 flex justify-end">
               <button onClick={toggleModal} className="btn btn-primary">
                 Close

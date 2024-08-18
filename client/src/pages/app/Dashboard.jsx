@@ -1,22 +1,84 @@
 import { useState, useEffect } from "react";
-// import { useNavigate } from "react-router-dom";
 import TaskCard from "../../components/TaskCard.jsx";
-import { DummyTasks } from "../../components/utils/dummy.js";
 
 function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debounced, setDebounced] = useState("");
-  const [tasks, setTasks] = useState(DummyTasks);
-  // const navigate = useNavigate();
+  const [tasks, setTasks] = useState([]);
 
-  const getAllTask = async () => {
-    const response = await fetch("http://localhost:3000/tasks");
-    const result = await response.json();
+  const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [newTaskContent, setNewTaskContent] = useState("");
 
-    const restoredTasks = result.data || [];
-    if (restoredTasks.length > 0) {
-      setTasks((prevTasks) => [...prevTasks, ...restoredTasks]);
-      console.log("Restored tasks added to dashboard:", restoredTasks);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const response = await fetch("/api/tasks");
+        const data = await response.json();
+        setTasks(data);
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTasks();
+  }, []);
+
+  const handleCreateTaskOpen = () => {
+    setIsCreateTaskOpen(!isCreateTaskOpen);
+  };
+
+  const handleCreateTask = async () => {
+    try {
+      const response = await fetch("/api/tasks/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: newTaskTitle,
+          content: newTaskContent,
+        }),
+      });
+      const data = await response.json();
+      setTasks([...tasks, data.task]);
+      setNewTaskTitle("");
+      setNewTaskContent("");
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const handleEdit = async (id, newTitle, newContent) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/tasks/update/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: newTitle, content: newContent }),
+      });
+      const updatedTask = await response.json();
+      const tasksResponse = await fetch("/api/tasks");
+      const tasksData = await tasksResponse.json();
+      setTasks(tasksData);
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      const response = await fetch(`/api/tasks/delete/${id}`, {
+        method: "POST",
+      });
+      const result = await response.json();
+      setTasks((prevTasks) => prevTasks.filter((task) => task.id !== id));
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -29,67 +91,74 @@ function Dashboard() {
     };
   }, [searchQuery]);
 
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebounced(searchQuery);
-    }, 500);
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [searchQuery]);
-
-  useEffect(() => {
-    getAllTask();
-  }, []);
-
-  const filteredTasks = tasks.filter((task) =>
-    task.title.toLowerCase().includes(debounced.toLowerCase())
-  );
-
-  // const handleEdit = (taskId, newTitle, newContent) => {
-  //   setTasks(
-  //     tasks.map((task) =>
-  //       task.id === taskId
-  //         ? { ...task, title: newTitle, content: newContent }
-  //         : task
-  //     )
-  //   );
-  // };
-
-  // const handleDelete = (taskId) => {
-  //   const taskToDelete = tasks.find((task) => task.id === taskId);
-  //   if (taskToDelete) {
-  //     setTasks(tasks.filter((task) => task.id !== taskId));
-  //     navigate("/app/trash", { state: { deletedTask: taskToDelete } });
-  //     console.log("Task deleted from dashboard:", taskToDelete);
-  //   }
-  // };
+  const filteredTasks = tasks.filter((task) => {
+    if (task && task.title) {
+      return task.title.toLowerCase().includes(debounced.toLowerCase());
+    }
+    return false;
+  });
 
   return (
-    <div className="container mx-auto p-4">
-      <h2 className="text-xl font-bold mb-4">Task Dashboard</h2>
-      <div className="mb-6 flex">
+    <div className="container mx-auto p-6">
+      <h2 className="text-2xl font-bold mb-6">Task Dashboard</h2>
+      <div className="mb-6 flex justify-between items-center">
         <input
           type="text"
           placeholder="Search tasks..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="input input-bordered w-full max-w-md mx-auto"
+          className="input input-bordered w-full max-w-md"
         />
+        <button onClick={handleCreateTaskOpen} className="btn btn-primary ml-4">
+          {isCreateTaskOpen ? "Close" : "New Task"}
+        </button>
       </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {filteredTasks.map((task) => (
-          <TaskCard
-            key={task.id}
-            id={task.id}
-            title={task.title}
-            content={task.content}
-            status={task.status}
-            // onEdit={handleEdit}
-            // onDelete={handleDelete}
+      {isCreateTaskOpen && (
+        <div className="mb-6 p-6 border rounded-lg shadow-sm bg-white">
+          <h3 className="text-lg font-semibold mb-4">Create New Task</h3>
+          <input
+            type="text"
+            placeholder="Task Title"
+            value={newTaskTitle}
+            onChange={(e) => setNewTaskTitle(e.target.value)}
+            className="input input-bordered w-full mb-4"
           />
-        ))}
+          <textarea
+            placeholder="Task Content"
+            value={newTaskContent}
+            onChange={(e) => setNewTaskContent(e.target.value)}
+            rows="5"
+            className="textarea textarea-bordered w-full"
+          />
+          <div className="mt-4 flex justify-end">
+            <button
+              onClick={handleCreateTask}
+              className="btn btn-primary"
+              disabled={!newTaskTitle || !newTaskContent}
+            >
+              Add Task
+            </button>
+          </div>
+        </div>
+      )}
+      {loading && <p>Loading...</p>}
+      {error && <p className="text-red-500">{error}</p>}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredTasks.length > 0 ? (
+          filteredTasks.map((task) => (
+            <TaskCard
+              key={task.id}
+              id={task.id}
+              title={task.title}
+              content={task.content}
+              status={task.status}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          ))
+        ) : (
+          <p className="text-center col-span-full">No tasks found.</p>
+        )}
       </div>
     </div>
   );
