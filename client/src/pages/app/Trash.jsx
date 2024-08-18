@@ -1,4 +1,3 @@
-// import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AiOutlineDelete, AiOutlineRollback } from "react-icons/ai";
 
@@ -33,8 +32,12 @@ function Trash() {
       }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (restoredTask) => {
       queryClient.invalidateQueries(["trashedTasks"]);
+      queryClient.setQueryData(["tasks"], (oldTasks) => [
+        restoredTask,
+        ...oldTasks,
+      ]);
     },
   });
 

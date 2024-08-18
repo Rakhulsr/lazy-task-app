@@ -91,13 +91,12 @@ function TaskCard({ id, title, content, status, onEdit, onDelete }) {
       </div>
 
       {isModalOpen && (
-        <div
-          className="fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-40 z-50 overflow-y-auto"
-          style={{ maxHeight: "100vh", overflowY: "auto" }}
-        >
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-40 z-50">
           <div
-            className="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full relative"
-            style={{ maxWidth: "400px", width: "100%" }}
+            className="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full relative overflow-hidden w-"
+            style={{
+              width: "400px",
+            }}
           >
             <button
               onClick={toggleModal}
@@ -108,12 +107,16 @@ function TaskCard({ id, title, content, status, onEdit, onDelete }) {
             <h3 className="text-lg font-bold mb-4 break-words text-black">
               {title}
             </h3>
-            <p
-              className="text-gray-700 break-words whitespace-pre"
-              style={{ maxHeight: "300px", overflowY: "auto" }}
+            <div
+              className="text-gray-700 whitespace-pre-wrap overflow-y-auto"
+              style={{
+                maxHeight: "400px",
+                wordBreak: "break-word",
+                overflowWrap: "break-word",
+              }}
             >
               {content}
-            </p>
+            </div>
             <div className="mt-4 flex justify-end">
               <button onClick={toggleModal} className="btn btn-primary">
                 Close
