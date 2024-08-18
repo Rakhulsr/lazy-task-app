@@ -9,10 +9,12 @@ import logo from "../assets/lazy.svg";
 
 import UserProfile from "./profile/UserProfile.jsx";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { useState } from "react";
 
 function Drawer() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const { mutate: logoutMutate } = useMutation({
     mutationFn: async () => {
@@ -40,13 +42,21 @@ function Drawer() {
     },
   });
 
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+    await logoutMutate();
+    setTimeout(() => {
+      setIsLoggingOut(false);
+    }, 2000);
+  };
   // const { data: authUser } = useQuery({ queryKey: ["authUser"] });
 
   return (
     <div className="drawer lg:drawer-open ">
       <input id="my-drawer-3" type="checkbox" className="drawer-toggle" />
       <div className="drawer-content flex flex-col">
-        <div className="navbar bg-primary w-full">
+        <div className="navbar bg-primary w-full z-50">
           <div className="flex-none lg:hidden">
             <label
               htmlFor="my-drawer-3"
@@ -70,7 +80,7 @@ function Drawer() {
           </div>
 
           <div className="navbar text-white px-6 py-4 sticky top-0 z-50 flex justify-center items-center w-full">
-            <div className="flex items-center justify-center">
+            <div className="flex items-center justify-center ">
               <img src={logo} alt="logo" className="h-10 w-10 mr-2" />
               <h1 className="text-2xl font-bold">Lazy Task</h1>
             </div>
@@ -90,7 +100,7 @@ function Drawer() {
         <Outlet />
       </div>
 
-      <div className="drawer-side">
+      <div className="drawer-side z-[1000]">
         <label htmlFor="my-drawer-3" className="drawer-overlay"></label>
         <ul className="menu min-h-full w-56 p-4 bg-primary">
           <UserProfile />
@@ -109,8 +119,9 @@ function Drawer() {
             Trash
           </Link>
           <button
-            onClick={() => logoutMutate()}
+            onClick={handleLogout}
             className="flex items-center p-4 hover:bg-gray-700 transition mt-auto"
+            disabled={isLoggingOut}
           >
             <AiOutlineLogout className="mr-3" />
             Logout

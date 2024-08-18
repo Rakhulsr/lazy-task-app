@@ -75,7 +75,7 @@ export async function createTask(req, res) {
 
 export async function updateTask(req, res) {
   try {
-    const { title, content } = req.body;
+    const { title, content, status } = req.body;
     const userId = req.user.id;
     const taskId = req.params.id;
 
@@ -99,6 +99,7 @@ export async function updateTask(req, res) {
       data: {
         title,
         content,
+        status,
       },
     });
 
@@ -140,28 +141,6 @@ export async function softDeleteTask(req, res) {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
-  }
-}
-
-export async function setTaskStatus(req, res) {
-  const taskId = req.params.id;
-  const userId = req.user.id;
-
-  const { status } = req.body;
-  try {
-    const taskStatus = await prisma.tasks.update({
-      where: {
-        id: parseInt(taskId),
-        userId: parseInt(userId),
-      },
-      data: {
-        status: status,
-      },
-    });
-    res.json(taskStatus);
-  } catch (error) {
-    console.error("Failed to update task status:", error);
-    res.status(500).json({ error: "Failed to update task status" });
   }
 }
 

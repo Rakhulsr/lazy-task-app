@@ -8,8 +8,18 @@ function TaskCard({ id, title, content, status, onEdit, onDelete }) {
   const [editTitle, setEditTitle] = useState(title);
   const [editContent, setEditContent] = useState(content);
 
-  const handleCheckboxChange = () => {
-    setIsCompleted(!isCompleted);
+  const handleCheckboxChange = async () => {
+    const newStatus = isCompleted ? "In Progress" : "Completed";
+    try {
+      await fetch(`/api/tasks/update/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      setIsCompleted(!isCompleted);
+    } catch (error) {
+      console.error("Failed to update task status:", error);
+    }
   };
 
   const toggleModal = () => {
@@ -26,15 +36,6 @@ function TaskCard({ id, title, content, status, onEdit, onDelete }) {
     toggleEditModal();
   };
 
-  // console.log("TaskCard props:", {
-  //   id,
-  //   title,
-  //   content,
-  //   status,
-  //   onEdit,
-  //   onDelete,
-  // });
-
   return (
     <>
       <div
@@ -42,9 +43,11 @@ function TaskCard({ id, title, content, status, onEdit, onDelete }) {
           isCompleted ? "bg-green-100" : "bg-white"
         } overflow-hidden whitespace-nowrap`}
       >
-        <div className="flex justify-between items-start ">
+        <div className="flex justify-between items-start p-2">
           <div className="line-clamp-2">
-            <h3 className="text-lg font-bold line-clamp-2">{title}</h3>
+            <h3 className="text-lg font-bold text-gray-800 line-clamp-2">
+              {title}
+            </h3>
             <p className="text-gray-600 line-clamp-2">{content} </p>
           </div>
           <input
@@ -54,6 +57,7 @@ function TaskCard({ id, title, content, status, onEdit, onDelete }) {
             className="max-h-md max-w-md "
           />
         </div>
+
         <div className="mt-4 flex justify-between items-center">
           <span
             className={`text-sm font-semibold ${
@@ -87,16 +91,29 @@ function TaskCard({ id, title, content, status, onEdit, onDelete }) {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-50 overflow-y-auto">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-lg relative overflow-y-auto scrollbar">
+        <div
+          className="fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-40 z-50 overflow-y-auto"
+          style={{ maxHeight: "100vh", overflowY: "auto" }}
+        >
+          <div
+            className="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full relative"
+            style={{ maxWidth: "400px", width: "100%" }}
+          >
             <button
               onClick={toggleModal}
               className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
             >
               ✕
             </button>
-            <h3 className="text-lg font-bold mb-4 break-words">{title}</h3>
-            <p className="text-gray-700 break-words">{content}</p>
+            <h3 className="text-lg font-bold mb-4 break-words text-black">
+              {title}
+            </h3>
+            <p
+              className="text-gray-700 break-words whitespace-pre"
+              style={{ maxHeight: "300px", overflowY: "auto" }}
+            >
+              {content}
+            </p>
             <div className="mt-4 flex justify-end">
               <button onClick={toggleModal} className="btn btn-primary">
                 Close

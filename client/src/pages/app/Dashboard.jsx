@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import TaskCard from "../../components/TaskCard.jsx";
+import { useQuery } from "@tanstack/react-query";
+import { Navigate } from "react-router-dom";
 
 function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -9,9 +11,26 @@ function Dashboard() {
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskContent, setNewTaskContent] = useState("");
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const {
+    data: authUser,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["authUser"],
+    queryFn: async () => {
+      try {
+        const res = await fetch("/api/auth/me", { credentials: "include" });
+        if (!res.ok) throw new Error("Unauthorized");
+        return res.json();
+      } catch (error) {
+        console.error(error);
+        return null;
+      }
+    },
+  });
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -43,7 +62,7 @@ function Dashboard() {
         }),
       });
       const data = await response.json();
-      setTasks([...tasks, data.task]);
+      setTasks([data.task, ...tasks]);
       setNewTaskTitle("");
       setNewTaskContent("");
     } catch (error) {
@@ -60,8 +79,16 @@ function Dashboard() {
         body: JSON.stringify({ title: newTitle, content: newContent }),
       });
       const updatedTask = await response.json();
+
       const tasksResponse = await fetch("/api/tasks");
       const tasksData = await tasksResponse.json();
+
+      const editedTask = tasksData.find((task) => task.id === id);
+      if (editedTask) {
+        tasksData.splice(tasksData.indexOf(editedTask), 1);
+        tasksData.unshift(editedTask);
+      }
+
       setTasks(tasksData);
     } catch (error) {
       setError(error.message);
@@ -98,6 +125,9 @@ function Dashboard() {
     return false;
   });
 
+  if (!authUser) {
+    return <Navigate to="/login" />;
+  }
   return (
     <div className="container mx-auto p-6">
       <h2 className="text-2xl font-bold mb-6">Task Dashboard</h2>

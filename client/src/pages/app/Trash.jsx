@@ -5,7 +5,6 @@ import { AiOutlineDelete, AiOutlineRollback } from "react-icons/ai";
 function Trash() {
   const queryClient = useQueryClient();
 
-  // Fetch trashed tasks
   const {
     data: tasks = [],
     isLoading,

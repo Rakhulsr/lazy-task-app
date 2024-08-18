@@ -5,7 +5,6 @@ import {
   getOneTask,
   permanentDeleteTask,
   restoreTask,
-  setTaskStatus,
   softDeleteTask,
   trashTasks,
   updateTask,
@@ -19,7 +18,6 @@ router.get("/", authMe, all);
 router.get("/task/:id", authMe, getOneTask);
 router.post("/create", authMe, createTask);
 router.put("/update/:id", authMe, updateTask);
-router.patch("/update/:id", authMe, setTaskStatus);
 
 router.post("/delete/:id", authMe, softDeleteTask);
 
