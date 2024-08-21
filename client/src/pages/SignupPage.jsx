@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 
 function SignupPage() {
@@ -135,6 +135,12 @@ function SignupPage() {
             {isLoading ? "Creating Account..." : "Sign Up"}
           </button>
         </form>
+
+        <Link to={"/login"}>
+          <div className="flex justify-end mt-2 items-center">
+            <span className="link text-black">Back To Login</span>
+          </div>
+        </Link>
       </div>
     </div>
   );
