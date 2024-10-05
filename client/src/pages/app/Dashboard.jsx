@@ -91,7 +91,7 @@ function Dashboard() {
       const response = await fetch(`/api/tasks/delete/${id}`, {
         method: "POST",
       });
-      const result = await response.json();
+      await response.json();
       setTasks((prevTasks) => prevTasks.filter((task) => task.id !== id));
     } catch (error) {
       console.error(error);

@@ -73,7 +73,7 @@ function Trash() {
 
   return (
     <div className="container mx-auto p-4">
-      <h2 className="text-2xl font-semibold text-gray-400 mb-6">Trash</h2>
+      <h2 className="text-2xl font-bold mb-6">Trash</h2>
 
       {tasks.length === 0 ? (
         <p className="text-gray-500 text-center">No tasks in the trash bin.</p>
